@@ -51,9 +51,31 @@ export default function Home() {
   const isMobile = useMobile()
 
   useEffect(() => {
-    // Initialize with mock data
-    setPosts(mockPosts)
-  }, [])
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch("/api/posts", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            input: "posts from the perspective of bitcoin that sound suggestive",
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error("Failed to fetch posts");
+        }
+  
+        const data = await response.json();
+        setPosts(data);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    };
+  
+    fetchPosts();
+  }, []);  
 
   const toggleLike = (postId: string) => {
     setLikedPosts((prev) => {
