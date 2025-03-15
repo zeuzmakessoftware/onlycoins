@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       },
     ],
     model: "llama-3.3-70b-versatile",
-    temperature: 0.6,
+    temperature: 1.4,
     max_tokens: 4096,
     top_p: 0.95,
     stream: true,
@@ -39,8 +39,6 @@ export async function POST(req: Request) {
   }
 
   const fullResponse = responseChunks.join("").trim();
-
-  console.log(fullResponse)
 
   const jsonMatch = fullResponse.match(/```json([\s\S]*?)```/);
   let jsonString = jsonMatch ? jsonMatch[1].trim() : fullResponse;

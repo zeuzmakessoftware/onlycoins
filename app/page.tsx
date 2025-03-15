@@ -49,33 +49,62 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const isMobile = useMobile()
+  const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await fetch("/api/posts", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            input: "posts from the perspective of bitcoin that sound suggestive",
-          }),
-        });
-  
-        if (!response.ok) {
-          throw new Error("Failed to fetch posts");
-        }
-  
-        const data = await response.json();
-        setPosts(data);
-      } catch (error) {
-        console.error("Error fetching posts:", error);
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          input: "posts from the perspective of bitcoin that sound suggestive",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch posts");
       }
-    };
-  
-    fetchPosts();
-  }, []);  
+
+      const data = await response.json();
+      setPosts(data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      setLoading(false);
+    }
+  };
+
+  const handleGeneratePosts = async () => {
+    setIsGenerating(true)
+    try {
+      setLoading(true);
+      const response = await fetch("/api/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          input: `posts from the perspective of ${selectedCrypto.name} that sound suggestive`,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch posts");
+      }
+
+      const data = await response.json();
+      setPosts(data);
+      setLoading(false);
+      setIsGenerating(false);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      setLoading(false);
+      setIsGenerating(false);
+    }
+  }
 
   const toggleLike = (postId: string) => {
     setLikedPosts((prev) => {
@@ -211,7 +240,7 @@ export default function Home() {
                   key={crypto.symbol}
                   type="button"
                   variant={selectedCrypto.symbol === crypto.symbol ? "default" : "outline"}
-                  className="relative h-20"
+                  className="relative h-20 cursor-pointer"
                   onClick={() => setSelectedCrypto(crypto)}
                 >
                   <div className="absolute inset-0 flex items-center justify-center opacity-10">
@@ -229,13 +258,14 @@ export default function Home() {
             </div>
             <Button 
               type="submit" 
-              className="w-full h-12 text-lg"
+              className="w-full h-12 text-lg cursor-pointer"
               disabled={isSubmitting || isGenerating}
+              onClick={handleGeneratePosts}
             >
-              {isSubmitting || isGenerating ? (
+              {isGenerating ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating Sexy {selectedCrypto.name} Posts...
+                  Generating Some Enticing {selectedCrypto.name} Posts...
                 </>
               ) : (
                 <>Generate {selectedCrypto.name} Posts</>
@@ -243,6 +273,12 @@ export default function Home() {
             </Button>
           </div>
         </form>
+        {loading && (
+          <div className="flex flex-col items-center justify-center mt-8">
+            <Loader2 className="animate-spin h-10 w-10 text-white mb-2" />
+            <p className="text-slate-400">Fetching posts...</p>
+          </div>
+        )}
         {posts.map((post) => (
           <Card key={post.id} className="bg-white/10 backdrop-blur-md border-none text-white mb-4 overflow-hidden">
             <CardContent className="p-0">
@@ -361,7 +397,7 @@ export default function Home() {
           </Card>
         ))}
 
-        {posts.length === 0 && (
+        {!loading && posts.length === 0 && (
           <div className="flex flex-col items-center justify-center text-slate-400 mt-8 p-8 bg-white/5 rounded-lg">
             <p className="text-center mb-2">No posts found for this cryptocurrency</p>
             <p className="text-center text-sm">Try selecting a different category</p>
