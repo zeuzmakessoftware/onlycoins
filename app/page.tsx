@@ -64,8 +64,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
       <div className="max-w-2xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">OnlyCoins</h1>
-
+        <h1 className="text-2xl font-bold mb-4">OnlyCoins</h1>        
         {posts.map((post) => (
           <Card key={post.id} className="bg-white/10 backdrop-blur-md border-none text-white mb-4 overflow-hidden">
             <CardContent className="p-0">
