@@ -271,7 +271,7 @@ export default function Home() {
       <div className="max-w-[1400px] mx-auto p-4 flex gap-6">
         {/* Main Content */}
         <div className="flex-1 max-w-2xl mx-auto">
-          <h1 className="text-4xl font-bold mb-6 text-center bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 text-transparent bg-clip-text">OnlyCoins</h1>
+          <h1 className="text-6xl font-bold my-6 text-center text-white to-yellow-500 text-transparent bg-clip-text">OnlyCoins</h1>
           <form onSubmit={handlePromptSubmit} className="mb-8">
             <div className="flex flex-col gap-6">
               <div className="grid grid-cols-4 gap-3">
