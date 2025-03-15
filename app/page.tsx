@@ -294,8 +294,8 @@ export default function Home() {
                       <Image
                         src={crypto.logo}
                         alt={crypto.name}
-                        width={40}
-                        height={40}
+                        width={69}
+                        height={69}
                         className="object-contain"
                       />
                     </div>
