@@ -12,16 +12,19 @@ import { mockPosts } from "@/lib/mock-data"
 import { useMobile } from "@/hooks/use-mobile"
 import { Input } from "@/components/ui/input"
 
-// Add supported cryptocurrencies
+// Update supported cryptocurrencies
 const SUPPORTED_CRYPTOS = [
   { name: "Bitcoin", symbol: "BTC", logo: "/crypto-logos/btc.svg" },
   { name: "Ethereum", symbol: "ETH", logo: "/crypto-logos/eth.svg" },
   { name: "Dogecoin", symbol: "DOGE", logo: "/crypto-logos/doge.svg" },
   { name: "Solana", symbol: "SOL", logo: "/crypto-logos/sol.svg" },
-  { name: "Cardano", symbol: "ADA", logo: "/crypto-logos/ada.svg" },
 ] as const
 
-type CryptoInfo = typeof SUPPORTED_CRYPTOS[number]
+type CryptoInfo = {
+  name: string
+  symbol: string
+  logo: string
+}
 
 // Update Post type to include more crypto info
 type Post = {
@@ -50,6 +53,8 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false)
   const isMobile = useMobile()
   const [loading, setLoading] = useState(false)
+  const [customCrypto, setCustomCrypto] = useState("")
+  const [isCustom, setIsCustom] = useState(false)
 
   const fetchPosts = async () => {
     try {
@@ -228,22 +233,41 @@ export default function Home() {
     })
   }
 
+  const handleCustomCryptoSubmit = () => {
+    if (!customCrypto.trim()) return
+    
+    const newCrypto: CryptoInfo = {
+      name: customCrypto,
+      symbol: customCrypto.toUpperCase(),
+      logo: `/placeholder.svg?text=${customCrypto.toUpperCase()}`
+    }
+    setSelectedCrypto(newCrypto)
+    setIsCustom(true)
+  }
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+    <main className="min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-pink-900">
       <div className="max-w-2xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">OnlyCoins</h1>
-        <form onSubmit={handlePromptSubmit} className="mb-6">
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-5 gap-2">
+        <h1 className="text-4xl font-bold mb-6 text-center bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 text-transparent bg-clip-text">OnlyCoins</h1>
+        <form onSubmit={handlePromptSubmit} className="mb-8">
+          <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-4 gap-3">
               {SUPPORTED_CRYPTOS.map((crypto) => (
                 <Button
                   key={crypto.symbol}
                   type="button"
-                  variant={selectedCrypto.symbol === crypto.symbol ? "default" : "outline"}
-                  className="relative h-20 cursor-pointer"
-                  onClick={() => setSelectedCrypto(crypto)}
+                  variant={!isCustom && selectedCrypto.symbol === crypto.symbol ? "default" : "outline"}
+                  className={`relative h-24 cursor-pointer overflow-hidden transition-all duration-300 hover:scale-105 ${
+                    !isCustom && selectedCrypto.symbol === crypto.symbol 
+                      ? "bg-gradient-to-br from-pink-500 to-purple-600 border-none text-white shadow-lg shadow-pink-500/20"
+                      : "bg-black/20 backdrop-blur-lg border-white/10 hover:border-pink-500/50 hover:bg-black/30"
+                  }`}
+                  onClick={() => {
+                    setSelectedCrypto(crypto)
+                    setIsCustom(false)
+                  }}
                 >
-                  <div className="absolute inset-0 flex items-center justify-center opacity-10">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-20 transition-opacity group-hover:opacity-30">
                     <Image
                       src={crypto.logo}
                       alt={crypto.name}
@@ -252,47 +276,83 @@ export default function Home() {
                       className="object-contain"
                     />
                   </div>
-                  <span className="relative z-10">{crypto.symbol}</span>
+                  <span className="relative z-10 font-bold">{crypto.symbol}</span>
                 </Button>
               ))}
             </div>
+            <div className="flex items-center gap-3">
+              <Input
+                type="text"
+                placeholder="Enter any other cryptocurrency..."
+                value={customCrypto}
+                onChange={(e) => setCustomCrypto(e.target.value)}
+                className="flex-1 h-10 bg-black/20 backdrop-blur-lg border-white/10 focus:border-pink-500/50 placeholder:text-white/50"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className={`h-10 px-6 transition-all duration-300 ${
+                  isCustom
+                    ? "bg-gradient-to-br from-pink-500 to-purple-600 border-none text-white shadow-lg shadow-pink-500/20"
+                    : "bg-black/20 backdrop-blur-lg border-white/10 hover:border-pink-500/50 hover:bg-black/30"
+                }`}
+                onClick={handleCustomCryptoSubmit}
+                disabled={!customCrypto.trim()}
+              >
+                Add
+              </Button>
+            </div>
             <Button 
-              type="submit" 
-              className="w-full h-12 text-lg cursor-pointer"
-              disabled={isSubmitting || isGenerating}
               onClick={handleGeneratePosts}
+              disabled={isGenerating}
+              className={`w-full h-12 transition-all duration-300 ${
+                isGenerating
+                  ? "bg-black/20 backdrop-blur-lg"
+                  : "bg-gradient-to-br from-pink-500 to-purple-600 hover:scale-[1.02] shadow-lg shadow-pink-500/20"
+              }`}
             >
               {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating Some Enticing {selectedCrypto.name} Posts...
-                </>
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-pink-500" />
+                  <span>Generating posts...</span>
+                </div>
               ) : (
-                <>Generate {selectedCrypto.name} Posts</>
+                `Generate ${selectedCrypto.name} posts`
               )}
             </Button>
           </div>
         </form>
         {loading && (
           <div className="flex flex-col items-center justify-center mt-8">
-            <Loader2 className="animate-spin h-10 w-10 text-white mb-2" />
-            <p className="text-slate-400">Fetching posts...</p>
+            <Loader2 className="animate-spin h-10 w-10 text-pink-500 mb-2" />
+            <p className="text-white/60">Fetching posts...</p>
           </div>
         )}
-        {posts.map((post) => (
-          <Card key={post.id} className="bg-white/10 backdrop-blur-md border-none text-white mb-4 overflow-hidden">
-            <CardContent className="p-0">
-              <div className="p-4">
-                <div className="flex items-center space-x-3 mb-3">
-                  <Avatar>
-                    <AvatarImage src={post.avatarUrl} />
-                    <AvatarFallback>{post.username.charAt(0)}</AvatarFallback>
-                  </Avatar>
+        {posts.length > 0 && (
+          <div className="grid gap-6">
+            {posts.map((post) => (
+              <div
+                key={post.id}
+                className="p-6 rounded-xl bg-black/20 backdrop-blur-lg border border-white/10 transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/10 hover:border-pink-500/20"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gradient-to-br from-pink-500 to-purple-600 p-[2px]">
+                    <div className="h-full w-full rounded-full overflow-hidden">
+                      <Image
+                        src={post.avatarUrl}
+                        alt={post.username}
+                        width={48}
+                        height={48}
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
                   <div className="flex-1">
-                    <div className="flex items-center">
-                      <p className="font-medium">{post.username}</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-lg">{post.username}</h3>
+                      <span className="text-white/60">@{post.userHandle}</span>
                       {post.verified && (
-                        <svg className="w-4 h-4 ml-1 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-pink-500" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
                         </svg>
                       )}
@@ -300,105 +360,77 @@ export default function Home() {
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleSubscribe(post.username)}
-                        className={`ml-2 h-7 px-2 ${
+                        className={`ml-auto h-8 px-3 transition-colors ${
                           subscribedUsers.has(post.username)
-                            ? "bg-primary/10 text-primary hover:bg-primary/20"
-                            : "hover:bg-white/10"
+                            ? "bg-pink-500/20 text-pink-500 hover:bg-pink-500/30"
+                            : "text-white/60 hover:text-white hover:bg-white/10"
                         }`}
                       >
                         {subscribedUsers.has(post.username) ? "Subscribed" : "Subscribe"}
                       </Button>
                     </div>
-                    <p className="text-sm text-slate-400">@{post.userHandle}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-slate-400">{post.timestamp}</p>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
-                          <MoreHorizontal className="h-5 w-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700 text-white">
-                        <DropdownMenuItem className="cursor-pointer">Not interested</DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer">Report post</DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer">Copy link</DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="cursor-pointer text-red-400 hover:text-red-300 focus:text-red-300 focus:bg-red-400/10"
-                          onClick={() => handleDeletePost(post.id)}
+                    <p className="text-white/80 leading-relaxed mb-4">{post.caption}</p>
+                    <div className="relative aspect-video w-full overflow-hidden rounded-xl mb-4 bg-gradient-to-br from-pink-500/20 to-purple-600/20">
+                      <Image
+                        src={post.imageUrl}
+                        alt={`${post.crypto.name} themed image`}
+                        fill
+                        className="object-cover transition-transform hover:scale-105"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-white/60 text-sm">
+                      <div className="flex items-center gap-6">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`flex items-center gap-2 transition-colors ${
+                            likedPosts.has(post.id)
+                              ? "text-pink-500"
+                              : "text-white/60 hover:text-pink-500"
+                          }`}
+                          onClick={() => toggleLike(post.id)}
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete post
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          <Heart className={`h-5 w-5 transition-colors ${likedPosts.has(post.id) ? "fill-current" : ""}`} />
+                          <span>{post.likes.toLocaleString()}</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex items-center gap-2 text-white/60 hover:text-blue-400"
+                        >
+                          <MessageCircle className="h-5 w-5" />
+                          <span>{post.comments.toLocaleString()}</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex items-center gap-2 text-white/60 hover:text-green-400"
+                        >
+                          <Repeat2 className="h-5 w-5" />
+                          <span>{post.shares.toLocaleString()}</span>
+                        </Button>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`transition-colors ${
+                          bookmarkedPosts.has(post.id)
+                            ? "text-yellow-500"
+                            : "text-white/60 hover:text-yellow-500"
+                        }`}
+                        onClick={() => toggleBookmark(post.id)}
+                      >
+                        <Bookmark className={`h-5 w-5 ${bookmarkedPosts.has(post.id) ? "fill-current" : ""}`} />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-
-                <p className="mb-3 whitespace-pre-line">{post.caption}</p>
-
-                <div className="relative aspect-video w-full overflow-hidden rounded-lg mb-3">
-                  <Image
-                    src={post.imageUrl || "/placeholder.svg"}
-                    alt={`${post.crypto.name} themed image`}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-
-                <div className="flex items-center text-xs text-slate-400 mb-2">
-                  <span>{post.likes.toLocaleString()} likes</span>
-                  <span className="mx-1">•</span>
-                  <span>{post.comments.toLocaleString()} comments</span>
-                  <span className="mx-1">•</span>
-                  <span>{post.shares.toLocaleString()} shares</span>
-                </div>
-
-                <Separator className="my-3 bg-white/20" />
-
-                <div className="flex justify-between text-slate-300">
-                  <Button
-                    variant="ghost"
-                    size={isMobile ? "sm" : "default"}
-                    className={`flex items-center gap-1.5 ${likedPosts.has(post.id) ? "text-red-500" : "text-slate-300 hover:text-red-400"}`}
-                    onClick={() => toggleLike(post.id)}
-                  >
-                    <Heart className={`h-5 w-5 ${likedPosts.has(post.id) ? "fill-current" : ""}`} />
-                    <span>Like</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size={isMobile ? "sm" : "default"}
-                    className="flex items-center gap-1.5 text-slate-300 hover:text-blue-400"
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                    <span>Comment</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size={isMobile ? "sm" : "default"}
-                    className="flex items-center gap-1.5 text-slate-300 hover:text-green-400"
-                  >
-                    <Repeat2 className="h-5 w-5" />
-                    <span>Repost</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size={isMobile ? "sm" : "default"}
-                    className={`flex items-center gap-1.5 ${bookmarkedPosts.has(post.id) ? "text-yellow-500" : "text-slate-300 hover:text-yellow-400"}`}
-                    onClick={() => toggleBookmark(post.id)}
-                  >
-                    <Bookmark className={`h-5 w-5 ${bookmarkedPosts.has(post.id) ? "fill-current" : ""}`} />
-                    <span>Save</span>
-                  </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-
+            ))}
+          </div>
+        )}
         {!loading && posts.length === 0 && (
-          <div className="flex flex-col items-center justify-center text-slate-400 mt-8 p-8 bg-white/5 rounded-lg">
+          <div className="flex flex-col items-center justify-center text-white/60 mt-8 p-8 rounded-xl bg-black/20 backdrop-blur-lg border border-white/10">
             <p className="text-center mb-2">No posts found for this cryptocurrency</p>
             <p className="text-center text-sm">Try selecting a different category</p>
           </div>
