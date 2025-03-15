@@ -8,8 +8,8 @@ export const mockPosts = [
     "likes": 8212,
     "comments": 312,
     "shares": 189,
-    "username": "BitcoinSiren",
-    "userHandle": "bitcoin_siren",
+    "username": "BitchcoinSiren",
+    "userHandle": "bitchcoin_siren",
     "verified": true,
     "avatarUrl": "/placeholder.svg?height=40&width=40"
   },
