@@ -85,9 +85,10 @@ export default function Home() {
   };
 
   const handleGeneratePosts = async () => {
-    setIsGenerating(true)
+    setIsGenerating(true);
     try {
       setLoading(true);
+      
       const response = await fetch("/api/posts", {
         method: "POST",
         headers: {
@@ -97,21 +98,40 @@ export default function Home() {
           input: `posts from the perspective of ${selectedCrypto.name} that sound suggestive`,
         }),
       });
-
+  
       if (!response.ok) {
         throw new Error("Failed to fetch posts");
       }
-
+  
       const data = await response.json();
-      setPosts(data);
+      
+      const postsWithImages = await Promise.all(
+        data.map(async (post: Post) => {
+          const imageResponse = await fetch(
+            `http://127.0.0.1:8787?name=${post.crypto.name}`
+          );
+          
+          if (!imageResponse.ok) {
+            throw new Error("Failed to generate image");
+          }
+  
+          const imageData = await imageResponse.json();
+          return {
+            ...post,
+            imageUrl: imageData.dataURI,
+          };
+        })
+      );
+  
+      setPosts(postsWithImages);
       setLoading(false);
       setIsGenerating(false);
     } catch (error) {
-      console.error("Error fetching posts:", error);
+      console.error("Error fetching posts or generating images:", error);
       setLoading(false);
       setIsGenerating(false);
     }
-  }
+  };
 
   const toggleLike = (postId: string) => {
     setLikedPosts((prev) => {
@@ -328,7 +348,7 @@ export default function Home() {
               <Button 
                 onClick={handleGeneratePosts}
                 disabled={isGenerating}
-                className={`w-full h-12 transition-all duration-300 ${
+                className={`w-full h-12 transition-all duration-300 cursor-pointer ${
                   isGenerating
                     ? "bg-black/20 backdrop-blur-lg"
                     : "bg-gradient-to-br from-pink-500 to-purple-600 hover:scale-[1.02] shadow-lg shadow-pink-500/20"
@@ -362,7 +382,7 @@ export default function Home() {
                     <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gradient-to-br from-pink-500 to-purple-600 p-[2px]">
                       <div className="h-full w-full rounded-full overflow-hidden">
                         <Image
-                          src={post.avatarUrl}
+                          src={post.imageUrl}
                           alt={post.username}
                           width={48}
                           height={48}
